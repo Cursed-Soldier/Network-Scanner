@@ -94,10 +94,10 @@ def CreateFolder(saveFolder):
     currentDir = os.getcwd()
     path = os.path.join(currentDir, saveFolder)
     if os.path.exists(path) or os.path.isdir(path):
-        os.chdir('results')
+        os.chdir(saveFolder)
     else:
         os.mkdir(path)
-        os.chdir('results')
+        os.chdir(saveFolder)
 
 
                           
