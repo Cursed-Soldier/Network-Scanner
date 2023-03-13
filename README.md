@@ -9,10 +9,10 @@ It follows this methodology:
 
 ## USAGE:
 To call the script simply run the command:
-`python3 pyscan.py [data.txt]` where `data.txt` is the list of IP addresses to scan
+`python3 pyscan.py [data.txt] [saveFolder]` where `data.txt` is the list of IP addresses to scan and `saveFolder` is the name of the folder to save the results into.
 
 ## OUTPUT:
-The program outputs data into the `results` folder where it is split into different .txt files depending on which part of the scan the IP was confirmed in.
+The program outputs data into the `[saveFolder]` where it is split into different .txt files depending on which part of the scan the IP was confirmed in.
 
 The structure of the output can be seen below:
 1. Ping

@@ -90,9 +90,9 @@ def WriteFile(filename, ping, ipLog):
     newFile.close()
     ipLog.clear()
 
-def CreateFolder():
+def CreateFolder(saveFolder):
     currentDir = os.getcwd()
-    path = os.path.join(currentDir, "results")
+    path = os.path.join(currentDir, saveFolder)
     if os.path.exists(path) or os.path.isdir(path):
         os.chdir('results')
     else:
@@ -103,55 +103,54 @@ def CreateFolder():
                           
 ips = []
 ipLog = []
-datafile = sys.argv[1]
 
-if(len(sys.argv) < 2 or len(sys.argv) > 2):
-    print("Invalid input, provide only one input argument")
+if(len(sys.argv) < 3 or len(sys.argv) > 3):
+    print("Invalid input, provide only two input arguments")
 
 else:
+    datafile = sys.argv[1]
+    saveFolder = sys.argv[2]
+    try:
 
-    #try:
-
-    
-    
-    ipfile = open(str(datafile), "r")
-
-    for ip in ipfile:
-        ip = str(ip).strip()
-        #Run ping against ips that are being onboarded
-        if(Ping(ip)):
-            ipLog.append(ip)
-
-        else:
-            ips.append(ip)
-            
         
-    ipfile.close()
+        
+        ipfile = open(str(datafile), "r")
 
-    #Create output folder
-    CreateFolder()
+        for ip in ipfile:
+            ip = str(ip).strip()
+            #Run ping against ips that are being onboarded
+            if(Ping(ip)):
+                ipLog.append(ip)
 
-    #Write successful ping results to file
-    WriteFile("results-ping.txt", True, ipLog)
+            else:
+                ips.append(ip)
+                
+            
+        ipfile.close()
+
+        #Create output folder
+        CreateFolder(saveFolder)
+
+        #Write successful ping results to file
+        WriteFile("results-ping.txt", True, ipLog)
 
 
-    #Nmap ports 80,443
-    Scan(1,"results-nmap1.txt", datafile)
+        #Nmap ports 80,443
+        Scan(1,"results-nmap1.txt", datafile)
 
-    #Nmap top 1000 ports
-    Scan(2,"results-nmap2.txt", datafile)
+        #Nmap top 1000 ports
+        Scan(2,"results-nmap2.txt", datafile)
 
-    #Nmap all ports
-    Scan(3,"results-nmap3.txt", datafile)
+        #Nmap all ports
+        Scan(3,"results-nmap3.txt", datafile)
 
-    #Write remaining 'dead' assets
-    WriteFile("results-dead.txt", False, ips)
-    
-    print('''
-Scan successful, view results in the files created
+        #Write remaining 'dead' assets
+        WriteFile("results-dead.txt", False, ips)
+        
+        print('''
+        Scan successful, view results in the files created
 
-Goodbye!''')
-
-    #except:
-    #    print("Could not read file provided")  
+        Goodbye Commander!''')
+    except:
+        print("Could not read file provided")  
 
