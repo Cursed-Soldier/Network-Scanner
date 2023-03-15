@@ -113,10 +113,10 @@ def CreateFolder(saveFolder):
         os.chdir(saveFolder)
 
 def SetParser():
-    parser.add_argument("-i", "--input", required = "true")
-    parser.add_argument("-o", "--output", default = "results")
-    parser.add_argument("-v", "--verbose", action = "store_true")
-    parser.add_argument("-s", "--stages", default="basic", choices=["ping","basic","topports","full"])
+    parser.add_argument("-i", "--input", required = "true", help = "input file (.txt) with the IPs to be used in the network scan")
+    parser.add_argument("-o", "--output", default = "results", help = "name of the output folder to be used (default = results)")
+    parser.add_argument("-v", "--verbose", action = "store_true", help = "verbose message option")
+    parser.add_argument("-s", "--stages", default="basic", choices=["ping","basic","topports","full"], help = "scan intensity selector")
 
 
 
@@ -134,52 +134,50 @@ datafile = args.input
 saveFolder = args.output
 verbose = args.verbose
 stages = args.stages
-#try:
 
+try:
+    ipfile = open(str(datafile), "r")
+    if verbose:
+        print("Starting ping scan...")
+    for ip in ipfile:
+        ip = str(ip).strip()
+        #Run ping against ips that are being onboarded
+        if(Ping(ip)):
+            ipLog.append(ip)
 
-
-ipfile = open(str(datafile), "r")
-if verbose:
-    print("Starting ping scan...")
-for ip in ipfile:
-    ip = str(ip).strip()
-    #Run ping against ips that are being onboarded
-    if(Ping(ip)):
-        ipLog.append(ip)
-
-    else:
-        ips.append(ip)
+        else:
+            ips.append(ip)
+            
         
-    
-ipfile.close()
+    ipfile.close()
 
-#Create output folder
-CreateFolder(saveFolder)
+    #Create output folder
+    CreateFolder(saveFolder)
 
-#Write successful ping results to file
-WriteFile("results-ping.txt", True, ipLog)
+    #Write successful ping results to file
+    WriteFile("results-ping.txt", True, ipLog)
 
 
-if(stages != "ping"):
-    #Nmap ports 80,443
-    Scan(1,"results-nmap1.txt", datafile, verbose)
+    if(stages != "ping"):
+        #Nmap ports 80,443
+        Scan(1,"results-nmap1.txt", datafile, verbose)
 
-    if(stages!= "basic"):
-        #Nmap top 1000 ports
-        Scan(2,"results-nmap2.txt", datafile, verbose)
+        if(stages!= "basic"):
+            #Nmap top 1000 ports
+            Scan(2,"results-nmap2.txt", datafile, verbose)
 
-        if(stages != "topports"):
-            #Nmap all ports
-            Scan(3,"results-nmap3.txt", datafile, verbose)
+            if(stages != "topports"):
+                #Nmap all ports
+                Scan(3,"results-nmap3.txt", datafile, verbose)
 
-#Write remaining 'dead' assets
-WriteFile("results-dead.txt", False, ips)
+    #Write remaining 'dead' assets
+    WriteFile("results-dead.txt", False, ips)
 
-print('''
-Scan successful, view results in the files created
+    print('''
+    Scan successful, view results in the files created
 
-Goodbye Commander!''')
+    Goodbye Commander!''')
 
-#except:
-#    print("Could not read file provided")  
+except:
+    print("Could not read file provided")  
 
