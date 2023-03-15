@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import argparse
 
 def Ping(ip):
     response = os.system("ping -c1 -W 1 " + str(ip))
@@ -13,7 +14,7 @@ def Ping(ip):
         return False
 
 
-def Nmap(ipList, stage):
+def Nmap(ipList, stage, verbose):
     results = []
 
     if(stage == 1):
@@ -22,9 +23,16 @@ def Nmap(ipList, stage):
         results.clear()
         
         command = ["sudo", "nmap", "-sS", "-p80,443", "--open", "-oG", "-"]
-        command = FormatCommand(command, ipList)
-
-        results = NmapScan(command)                 
+        for i in range(len(ipList)):
+            newCommand = command
+            newCommand.append(ipList[i])
+            if(verbose):
+                print("NMAP " + ipList[i])
+            if i == (len(ipList )- 1):
+                results = NmapScan(newCommand)
+            else:
+                NmapScan(newCommand)
+                          
 
     elif(stage == 2):
         print("Scanning top 1000 ports...")
@@ -32,9 +40,15 @@ def Nmap(ipList, stage):
         results.clear()
 
         command = ["sudo", "nmap", "-sS", "--top-ports", "1000", "--open", "-oG", "-"]
-        command = FormatCommand(command, ipList)
-
-        results = NmapScan(command)
+        for i in range(len(ipList)):
+            newCommand = command
+            newCommand.append(ipList[i])
+            if(verbose):
+                print("NMAP " + ipList[i])
+            if i == (len(ipList )- 1):
+                results = NmapScan(newCommand)
+            else:
+                NmapScan(newCommand)
 
     elif(stage == 3):
         print("Scanning all 65525 ports...")
@@ -42,20 +56,17 @@ def Nmap(ipList, stage):
         results.clear()
 
         command = ["sudo", "nmap", "-sS", "-p0-65535", "--open", "-oG", "-"]
-        command = FormatCommand(command, ipList)
+        for i in range(len(ipList)):
+            newCommand = command
+            newCommand.append(ipList[i])
+            if(verbose):
+                print("NMAP " + ipList[i])
+            if i == (len(ipList )- 1):
+                results = NmapScan(newCommand)
+            else:
+                NmapScan(newCommand)        
 
-        results = NmapScan(command)
-        
-
-    return results
-
-
-def FormatCommand(command, ipList):
-    for ip in ipList:
-        command.append(ip)
-        
-    return command
-    
+    return results          
 
 
 def NmapScan(command):
@@ -71,10 +82,11 @@ def NmapScan(command):
 
 
 
-def Scan(stage, filename, datafile):
-    print("Nmap Stage: ",stage)
+def Scan(stage, filename, datafile, verbose):
+    if(verbose):
+        print("Starting NMAP scan...")
     #Run nmap on command specified
-    ipLog = Nmap(ips,stage)
+    ipLog = Nmap(ips,stage,verbose)
 
     if(len(ipLog) > 0):
         WriteFile(filename, False, ipLog)
@@ -85,6 +97,7 @@ def WriteFile(filename, ping, ipLog):
     newFile = open(filename, "w")
     for ip in ipLog:
         newFile.write(ip + "\n")
+    for ip in ipLog:
         if(ping == False):
             ips.remove(ip)
     newFile.close()
@@ -99,58 +112,74 @@ def CreateFolder(saveFolder):
         os.mkdir(path)
         os.chdir(saveFolder)
 
+def SetParser():
+    parser.add_argument("-i", "--input", required = "true")
+    parser.add_argument("-o", "--output", default = "results")
+    parser.add_argument("-v", "--verbose", action = "store_true")
+    parser.add_argument("-s", "--stages", default="basic", choices=["ping","basic","topports","full"])
+
+
+
+
+#Start of program
+parser = argparse.ArgumentParser()
+SetParser()
+args = parser.parse_args()
 
                           
 ips = []
 ipLog = []
 
-if(len(sys.argv) < 3 or len(sys.argv) > 3):
-    print("Invalid input, provide only two input arguments")
+datafile = args.input
+saveFolder = args.output
+verbose = args.verbose
+stages = args.stages
+#try:
 
-else:
-    datafile = sys.argv[1]
-    saveFolder = sys.argv[2]
-    try:
 
+
+ipfile = open(str(datafile), "r")
+if verbose:
+    print("Starting ping scan...")
+for ip in ipfile:
+    ip = str(ip).strip()
+    #Run ping against ips that are being onboarded
+    if(Ping(ip)):
+        ipLog.append(ip)
+
+    else:
+        ips.append(ip)
         
-        
-        ipfile = open(str(datafile), "r")
+    
+ipfile.close()
 
-        for ip in ipfile:
-            ip = str(ip).strip()
-            #Run ping against ips that are being onboarded
-            if(Ping(ip)):
-                ipLog.append(ip)
+#Create output folder
+CreateFolder(saveFolder)
 
-            else:
-                ips.append(ip)
-                
-            
-        ipfile.close()
-
-        #Create output folder
-        CreateFolder(saveFolder)
-
-        #Write successful ping results to file
-        WriteFile("results-ping.txt", True, ipLog)
+#Write successful ping results to file
+WriteFile("results-ping.txt", True, ipLog)
 
 
-        #Nmap ports 80,443
-        Scan(1,"results-nmap1.txt", datafile)
+if(stages != "ping"):
+    #Nmap ports 80,443
+    Scan(1,"results-nmap1.txt", datafile, verbose)
 
+    if(stages!= "basic"):
         #Nmap top 1000 ports
-        Scan(2,"results-nmap2.txt", datafile)
+        Scan(2,"results-nmap2.txt", datafile, verbose)
 
-        #Nmap all ports
-        Scan(3,"results-nmap3.txt", datafile)
+        if(stages != "topports"):
+            #Nmap all ports
+            Scan(3,"results-nmap3.txt", datafile, verbose)
 
-        #Write remaining 'dead' assets
-        WriteFile("results-dead.txt", False, ips)
-        
-        print('''
-        Scan successful, view results in the files created
+#Write remaining 'dead' assets
+WriteFile("results-dead.txt", False, ips)
 
-        Goodbye Commander!''')
-    except:
-        print("Could not read file provided")  
+print('''
+Scan successful, view results in the files created
+
+Goodbye Commander!''')
+
+#except:
+#    print("Could not read file provided")  
 
