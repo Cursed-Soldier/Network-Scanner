@@ -28,10 +28,10 @@ There are options to only do steps 1, 1-2 or 1-3 if a full scan is not required.
 To use the script, follow the instructions below:
 
 For Linux:
-`python3 pyscan.py [-h] -i INPUT [-o OUTPUT] [-v] [-s {ping,basic,topports,full}]` 
+`python3 pyscan.py [-h] -i INPUT [-o OUTPUT] [-v] [-s {ping,basic,topports,full}] [-sp]` 
 
 For Windows:
-`python pyscan.py [-h] -i INPUT [-o OUTPUT] [-v] [-s {ping,basic,topports,full}]`
+`python pyscan.py [-h] -i INPUT [-o OUTPUT] [-v] [-s {ping,basic,topports,full}] [-sp]`
 
 ### Options:
 
@@ -46,11 +46,13 @@ scan intensity selector
 
 `-s {ping,basic,topports,full}`, `--stages {ping,basic,topports,full}` scan intensity selector
 
+`-sp`, `--specific`, ignore stages and only run specified stage
+
+
 ## OUTPUT:
 
-The program outputs data into the provided `OUTPUT` folder where it is split into different .txt files depending on which part of the scan the IP was confirmed in.
-
-  
+### Stage Output
+The regular output puts data into the provided `OUTPUT` folder where it is split into different .txt files depending on which part of the scan the IP was confirmed in.  
 
 The structure of the output can be seen below:
 
@@ -61,3 +63,12 @@ The structure of the output can be seen below:
 5. Remaining 'dead' IPs
 
 This output is possible for a full scan only. If another stage is chosen or there is nothing to put into a specific output, the files will not be created.
+
+### Specific Output
+If the specific flag is used then the output will only be made for the specific nmap command called and a file will be made to reflect that. The outputs will include nmap results for one of the arguments below:
+1. Ping
+2. Nmap on port 80 and 443
+3. Nmap on top 1000 ports
+4. Nmap on full port range (0-65535)
+
+Also included is the list of remaining 'dead' IPs
