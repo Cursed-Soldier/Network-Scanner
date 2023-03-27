@@ -168,13 +168,13 @@ if(specific):
 
     elif(stages == "topports"):
         #Nmap top 1000 ports
-        ipLog = Scan(2,topportsName inputfilepath, verbose)
+        ipLog = Scan(2,topportsName, inputfilepath, verbose)
         WriteFiles(topportsName, False)
 
     elif(stages == "full"):
         #Nmap all ports
-        ipLog = Scan(3,"results-nmap3.txt", inputfilepath, verbose)
-        WriteFiles("results-nmap-full.txt", False)
+        ipLog = Scan(3,fullscanName, inputfilepath, verbose)
+        WriteFiles(fullscanName, False)
     else:
         pass
 
