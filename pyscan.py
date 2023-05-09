@@ -15,8 +15,8 @@ def Ping(ip):
 
 def NmapPing(file, verbose):
     results = []
-    
-    print("Running ping scan")
+    if verbose:
+        print("Running ping scan")
     results.clear()
     
     command = ["sudo", "nmap", "-iL", file, "-sn", "--open", "-oG", "-"]
@@ -29,7 +29,8 @@ def Nmap(file, stage, verbose):
     results = []
 
     if(stage == 1):
-        print("Scanning ports 80 and 443...")
+        if verbose:
+            print("Scanning ports 80 and 443...")
         #Do a port 80,443 scan
         results.clear()
         
@@ -38,7 +39,8 @@ def Nmap(file, stage, verbose):
                           
 
     elif(stage == 2):
-        print("Scanning top 1000 ports...")
+        if verbose:
+            print("Scanning top 1000 ports...")
         #Do a top 1000 ports scan
         results.clear()
 
@@ -46,7 +48,8 @@ def Nmap(file, stage, verbose):
         results = NmapScan(command)
 
     elif(stage == 3):
-        print("Scanning all 65525 ports...")
+        if verbose:
+            print("Scanning all 65525 ports...")
         #Do a full ports scan
         results.clear()
 
@@ -86,6 +89,8 @@ def WriteFiles(filename, dead):
             for ip in ipLog:
                 newFile.write(ip.strip() + "\n")
         for ip in ipLog:
+            #Add to output array
+            output.append(ip + "\n")
             ips.remove(ip)
 
     with open("results-dead.txt","w") as deadFile:
@@ -122,7 +127,7 @@ parser = argparse.ArgumentParser()
 SetParser()
 args = parser.parse_args()
 
-                          
+output = []                          
 ips = []
 ipLog = []
 
@@ -145,7 +150,8 @@ ipfile = open(str(inputfilepath), "r")
 
 for ip in ipfile:
     ip = str(ip).strip()
-    ips.append(ip)        
+    ips.append(ip)
+    #Update counter for results
     
 ipfile.close()
 
@@ -154,7 +160,8 @@ CreateFolder(saveFolder)
 
 #Run a scan using a specific nmap call
 if(specific):
-    print("Running specific scan: ", stages)
+    if verbose:
+        print("Running specific scan: ", stages)
     if(stages == "ping"):
         #Run the nmap ping only scan to check for live assets
         ipLog = NmapPing(inputfilepath, verbose)
@@ -173,7 +180,7 @@ if(specific):
 
     elif(stages == "full"):
         #Nmap all ports
-        ipLog = Scan(3,fullscanName, inputfilepath, verbose)
+        ipLog = Scan(3,"results-nmap3.txt", inputfilepath, verbose)
         WriteFiles(fullscanName, False)
     else:
         pass
@@ -197,7 +204,7 @@ else:
         ReadInput(carryfilepath)
         #Nmap ports 80,443
         ipLog = Scan(1,"results-nmap1.txt", carryfilepath, verbose)        
-        WriteFiles("results-nmap1.txt", False)
+        WriteFiles(basicName, False)
         ips.clear()        
         ipLog.clear()
         
@@ -205,7 +212,7 @@ else:
             ReadInput(carryfilepath)
             #Nmap top 1000 ports
             ipLog = Scan(2,"results-nmap-.txt", carryfilepath, verbose)
-            WriteFiles("results-nmap-top-ports.txt", False)
+            WriteFiles(topportsName, False)
             ips.clear()        
             ipLog.clear()
 
@@ -213,14 +220,19 @@ else:
                 ReadInput(carryfilepath)
                 #Nmap all ports
                 ipLog = Scan(3,"results-nmap-full.txt", carryfilepath, verbose)
-                WriteFiles("results-nmap-full.txt", False)
+                WriteFiles(fullscanName, False)
                 ips.clear()        
                 ipLog.clear()
 
-print('''
-Scan successful, view results in the files created
-
-Goodbye Commander!''')
+#Output the ips that were 'alive'
+for ip in output:
+    sys.stdout.write(ip)
+    
+if verbose:
+    print("\nScan successful, view results in the files created")
+    print("\n~~~Scan Results~~~")
+    print("Alive IP's found: " + str(len(output)) + "\n")
+    print("Goodbye Commander!")
 
 #except:
  #   print("Could not read file provided")  
